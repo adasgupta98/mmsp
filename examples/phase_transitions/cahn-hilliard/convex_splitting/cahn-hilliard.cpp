@@ -251,15 +251,6 @@ void generate(int dim, const char* filename)
 		std::cout<<std::setprecision(12);
 		if (rank==0)
 			std::cout<<'0'<<'\t'<<dV*energy<<'\t'<<dV*mass<<std::endl;
-
-		#ifdef DEBUG
-		std::ofstream ferr;
-		if (rank==0) {
-			ferr.open("error.log");
-			ferr<<"step\titer\tnormBminusAX\tnormB\tresidual\n";
-			ferr.close();
-		}
-		#endif
 	}
 }
 
@@ -295,12 +286,6 @@ void update(MMSP::grid<dim,vector<T> >& oldGrid, int steps)
 		lapWeight += 2.0/pow(dx(oldGrid,d),2.0); // dim=2 -> lapWeight = 4/h^2 if dy=dx=h
 		dV *= dx(oldGrid,d);
 	}
-
-	#ifdef DEBUG
-	std::ofstream ferr;
-	if (rank==0)
-		ferr.open("error.log", std::ofstream::app);
-	#endif
 
 	for (int step=0; step<steps; step++) {
 		double residual=1.0;
@@ -414,18 +399,7 @@ void update(MMSP::grid<dim,vector<T> >& oldGrid, int steps)
 				MPI::COMM_WORLD.Allreduce(&localNormB, &normB, 1, MPI_DOUBLE, MPI_SUM);
 				#endif
 
-				#ifdef DEBUG
-				if (rank==0)
-					ferr<<step<<'\t'<<iter<<'\t'<<residual<<'\t'<<normB<<'\t';
-				#endif
-
 				residual = sqrt(residual/normB)/(2.0*gridSize);
-
-				#ifdef DEBUG
-				if (rank==0)
-					ferr<<residual<<std::endl;
-				#endif
-
 			}
 
 		}
@@ -460,9 +434,6 @@ void update(MMSP::grid<dim,vector<T> >& oldGrid, int steps)
 
 		swap(oldGrid,newGrid);
 	}
-	#ifdef DEBUG
-	ferr.close();
-	#endif
 	if (rank==0)
 		std::cout<<std::flush;
 }
